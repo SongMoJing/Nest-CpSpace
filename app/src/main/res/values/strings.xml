@@ -4,4 +4,14 @@
 	<string name="nav_locale">位置</string>
 	<string name="nav_ta">Ta</string>
 	<string name="nav_settings">设置</string>
+	<string name="nav_settings_item_general">常规设置</string>
+	<string name="nav_settings_item_general_notification">通知设置</string>
+	<string name="nav_settings_item_general_power">省电设置</string>
+	<string name="nav_settings_item_general_about">关于</string>
+
+	<string name="string_unknown">未知</string>
+	<string name="string_gender_male">男</string>
+	<string name="string_gender_female">女</string>
+	<string name="string_gender_unknown">未知</string>
+
 </resources>

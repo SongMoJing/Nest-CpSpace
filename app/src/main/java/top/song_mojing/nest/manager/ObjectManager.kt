@@ -1,21 +1,27 @@
 package top.song_mojing.nest.manager
 
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import top.song_mojing.nest.models.Companion
 import java.io.File
+import kotlin.properties.Delegates
 
 object ObjectManager {
 
-	var companion: Companion? = Companion(
-		name = "Song_Mojing",
-		nickname = "松蓦箐",
-		sex = "Male",
-		birthday = null
-	)
-	var self: Companion? = null
-	var setting: SettingManager = SettingManager()
+	private var currentConfigDir: File? = null
+
+	var companion: Companion? by Delegates.observable(null) { _, _, _ ->
+		saveToDisk("companion.json", companion)
+	}
+	var self: Companion? by Delegates.observable(null) { _, _, _ ->
+		saveToDisk("self.json", self)
+	}
+	var setting: SettingManager by Delegates.observable(SettingManager()) { _, _, _ ->
+		saveToDisk("settings.json", setting)
+	}
 
 	fun load(configDir: File): Boolean {
+		currentConfigDir = configDir
 		if (!configDir.exists()) {
 			configDir.mkdirs()
 			return false
@@ -27,7 +33,7 @@ object ObjectManager {
 		val companionFile = File(configDir, "companion.json")
 		val selfFile = File(configDir, "self.json")
 		val settingsFile = File(configDir, "settings.json")
-		companion = loadFile<Companion>(companionFile)
+		companion = loadFile<Companion>(companionFile) ?: companion
 		self = loadFile<Companion>(selfFile)
 		loadFile<SettingManager>(settingsFile)?.let {
 			setting = it
@@ -38,6 +44,20 @@ object ObjectManager {
 	private val json = Json {
 		ignoreUnknownKeys = true
 		coerceInputValues = true
+		prettyPrint = true
+	}
+
+	private inline fun <reified T> saveToDisk(fileName: String, data: T?) {
+		val dir = currentConfigDir ?: return
+		if (data == null) return
+
+		try {
+			val file = File(dir, fileName)
+			val content = json.encodeToString(data)
+			file.writeText(content)
+		} catch (e: Exception) {
+			e.printStackTrace()
+		}
 	}
 
 	/**

@@ -8,7 +8,7 @@ import java.util.Date
 class Companion(
 	var name: String,
 	var nickname: String?,
-	var sex: String,
+	var gender: Gender,
 	@Serializable(with = DateSerializer::class)
 	var birthday: Date?
 ) {

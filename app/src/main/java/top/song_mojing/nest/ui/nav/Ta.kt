@@ -25,7 +25,7 @@ fun Ta(
 private fun Companion(
 	companion: Companion
 ) {
-	Text(text = companion.nickname)
+	companion.nickname?.let { Text(text = it) }
 }
 
 @Composable
