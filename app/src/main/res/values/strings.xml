@@ -1,3 +1,7 @@
 <resources>
 	<string name="app_name">情侣空间</string>
+
+	<string name="nav_locale">位置</string>
+	<string name="nav_ta">Ta</string>
+	<string name="nav_settings">设置</string>
 </resources>
