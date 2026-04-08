@@ -17,24 +17,30 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.Female
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Male
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,19 +50,29 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import top.song_mojing.nest.R
 import top.song_mojing.nest.manager.ObjectManager
 import top.song_mojing.nest.models.Gender
+import top.song_mojing.nest.ui.window.PersonalInfo
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 @Composable
+@OptIn(ExperimentalMaterial3Api::class)
 fun Settings(
 	modifier: Modifier = Modifier
 ) {
 	val scrollState = rememberScrollState()
-
+	val scope = rememberCoroutineScope()
+	val sheetState = rememberModalBottomSheetState()
+	var showBottomSheet by remember { mutableStateOf(false) }
+	LaunchedEffect(sheetState.isVisible) {
+		if (!sheetState.isVisible) {
+			showBottomSheet = false
+		}
+	}
 	Column(
 		modifier = modifier
 			.fillMaxSize()
@@ -68,7 +84,10 @@ fun Settings(
 		UserInfoCard(
 			username = ObjectManager.self?.name ?: stringResource(R.string.string_unknown),
 			birthday = ObjectManager.self?.birthday ?: Date(),
-			gender = ObjectManager.self?.gender ?: Gender.Unknown
+			gender = ObjectManager.self?.gender ?: Gender.Unknown,
+			onEditClick = {
+				showBottomSheet = true
+			}
 		)
 		Text(
 			text = stringResource(R.string.nav_settings_item_general),
@@ -99,13 +118,32 @@ fun Settings(
 			)
 		}
 	}
+	if (showBottomSheet) {
+		ModalBottomSheet(
+			onDismissRequest = { scope.launch { sheetState.hide() } },
+			sheetState = sheetState,
+			containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+			dragHandle = { }
+		) {
+			PersonalInfo(
+				onClose = {
+					scope.launch { sheetState.hide() }
+				},
+				onConfirm = {
+					ObjectManager.self = it
+					scope.launch { sheetState.hide() }
+				}
+			)
+		}
+	}
 }
 
 @Composable
 fun UserInfoCard(
 	username: String,
 	gender: Gender,
-	birthday: Date
+	birthday: Date,
+	onEditClick: () -> Unit
 ) {
 	ElevatedCard(
 		modifier = Modifier.fillMaxWidth(),
@@ -143,7 +181,7 @@ fun UserInfoCard(
 					tint = genderColor
 				)
 				IconButton(
-					onClick = { },
+					onClick = onEditClick,
 					modifier = Modifier.size(27.dp)
 				) {
 					Icon(
@@ -163,6 +201,7 @@ fun UserInfoCard(
 		}
 	}
 }
+
 
 @Composable
 fun SettingsListItem(

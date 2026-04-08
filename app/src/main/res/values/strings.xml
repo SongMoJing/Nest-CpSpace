@@ -9,9 +9,18 @@
 	<string name="nav_settings_item_general_power">省电设置</string>
 	<string name="nav_settings_item_general_about">关于</string>
 
+	<string name="welcome_guidance_name_0">"Hi, "</string>
+	<string name="welcome_guidance_name_hint">你的名字</string>
+	<string name="welcome_guidance_gender_0">你是</string>
+	<string name="welcome_guidance_gender_hint">你的性别</string>
+	<string name="welcome_guidance_birthday_0">生于</string>
+	<string name="welcome_guidance_birthday_hint">你的生日</string>
+
+	<string name="string_cancel">取消</string>
+	<string name="string_close">关闭</string>
+	<string name="string_confirm">确定</string>
 	<string name="string_unknown">未知</string>
 	<string name="string_gender_male">男</string>
 	<string name="string_gender_female">女</string>
 	<string name="string_gender_unknown">未知</string>
-
 </resources>
