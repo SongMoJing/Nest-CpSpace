@@ -2,6 +2,32 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 	xmlns:tools="http://schemas.android.com/tools">
 
+	<!-- 网络 -->
+	<uses-permission android:name="android.permission.INTERNET" />
+	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+	<!-- 定位 -->
+	<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+	<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+	<uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"
+		tools:ignore="BackgroundLocationPolicy" />
+
+	<!-- 前台服务 -->
+	<uses-permission android:name="android.permission.FOREGROUND_SERVICE"
+		tools:ignore="ForegroundServicesPolicy" />
+	<uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+	<uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+	<!-- 开机自启 -->
+	<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+	<!-- 忽略电池优化 -->
+	<uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+	<!-- 通知 -->
+	<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+	<!-- 读取使用统计数据 -->
+	<uses-permission
+		android:name="android.permission.PACKAGE_USAGE_STATS"
+		tools:ignore="ProtectedPermissions" />
+
 	<application
 		android:allowBackup="true"
 		android:dataExtractionRules="@xml/data_extraction_rules"
@@ -12,16 +38,52 @@
 		android:supportsRtl="true"
 		android:theme="@style/Theme.Nest">
 		<activity
+			android:name=".ui.activity.settings.NotificationSettings"
+			android:exported="false"
+			android:theme="@style/Theme.Nest" />
+		<activity
+			android:name=".ui.activity.settings.PowerSettings"
+			android:exported="false"
+			android:theme="@style/Theme.Nest" />
+		<activity
+			android:name=".ui.activity.settings.PermissionsSettings"
+			android:exported="false"
+			android:theme="@style/Theme.Nest" />
+		<activity
 			android:name=".ui.activity.MainActivity"
 			android:exported="true"
-			android:label="@string/app_name"
+			android:launchMode="singleTask"
 			android:theme="@style/Theme.Nest">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
-
 				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
 		</activity>
+
+		<service
+			android:name=".android.service.CoreCommunicationService"
+			android:enabled="true"
+			android:exported="false"
+			android:foregroundServiceType="location|dataSync" />
+
+		<receiver
+			android:name=".android.receiver.BootReceiver"
+			android:enabled="true"
+			android:exported="false">
+			<intent-filter>
+				<action android:name="android.intent.action.BOOT_COMPLETED" />
+			</intent-filter>
+		</receiver>
+
+		<receiver
+			android:name=".android.receiver.NotificationActionReceiver"
+			android:enabled="true"
+			android:exported="false">
+			<intent-filter>
+				<action android:name="STOP_SERVICE" />
+				<action android:name="CUSTOM_ACTION" />
+			</intent-filter>
+		</receiver>
 	</application>
 
 </manifest>

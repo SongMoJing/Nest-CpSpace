@@ -1,10 +1,16 @@
 package top.song_mojing.nest.ui.activity
 
+import android.Manifest
 import android.app.Activity
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -43,9 +49,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
+import androidx.core.content.ContextCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import kotlinx.coroutines.launch
 import top.song_mojing.nest.R
+import top.song_mojing.nest.android.service.CoreCommunicationService
 import top.song_mojing.nest.manager.ObjectManager
 import top.song_mojing.nest.ui.nav.Locale
 import top.song_mojing.nest.ui.nav.Settings
@@ -112,6 +120,48 @@ class MainActivity : ComponentActivity() {
 				}
 			}
 			LoadConfig()
+			checkAndRequestPermissions()
+		}
+	}
+
+	private fun checkAndRequestPermissions() {
+		when {
+			ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+					== PackageManager.PERMISSION_GRANTED -> {
+				startCoreService()
+			}
+
+			else -> {
+				// 直接请求权限
+				requestPermissionLauncher.launch(
+					arrayOf(
+						Manifest.permission.ACCESS_FINE_LOCATION,
+						Manifest.permission.ACCESS_COARSE_LOCATION
+					)
+				)
+			}
+		}
+	}
+
+	private val requestPermissionLauncher = registerForActivityResult(
+		ActivityResultContracts.RequestMultiplePermissions()
+	) { permissions ->
+		val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+		val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+		if (fineLocationGranted) {
+			startCoreService()
+		} else {
+			// 权限被拒绝，可以弹窗解释为什么需要权限
+			Log.e("Permission", "定位权限被拒绝，无法提供精准定位")
+		}
+	}
+
+	private fun startCoreService() {
+		val serviceIntent = Intent(this, CoreCommunicationService::class.java)
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			this.startForegroundService(serviceIntent)
+		} else {
+			this.startService(serviceIntent)
 		}
 	}
 }
@@ -150,7 +200,7 @@ private fun LoadConfig() {
 }
 
 
-sealed class Screen(
+private sealed class Screen(
 	val icon: @Composable ((selected: Boolean) -> Unit),
 	val label: @Composable ((selected: Boolean) -> Unit)
 ) {

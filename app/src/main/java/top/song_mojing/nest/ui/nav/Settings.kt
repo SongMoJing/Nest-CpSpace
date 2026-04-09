@@ -1,10 +1,13 @@
 package top.song_mojing.nest.ui.nav
 
+import android.content.Intent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -12,16 +15,19 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Female
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Male
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -47,6 +53,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -54,6 +61,9 @@ import kotlinx.coroutines.launch
 import top.song_mojing.nest.R
 import top.song_mojing.nest.manager.ObjectManager
 import top.song_mojing.nest.models.Gender
+import top.song_mojing.nest.ui.activity.settings.NotificationSettings
+import top.song_mojing.nest.ui.activity.settings.PermissionsSettings
+import top.song_mojing.nest.ui.activity.settings.PowerSettings
 import top.song_mojing.nest.ui.window.PersonalInfo
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -64,6 +74,7 @@ import java.util.Locale
 fun Settings(
 	modifier: Modifier = Modifier
 ) {
+	val context = LocalContext.current
 	val scrollState = rememberScrollState()
 	val scope = rememberCoroutineScope()
 	val sheetState = rememberModalBottomSheetState()
@@ -99,12 +110,28 @@ fun Settings(
 			SettingsListItem(
 				icon = Icons.Default.Notifications,
 				title = stringResource(R.string.nav_settings_item_general_notification),
-				onClick = {}
+				onClick = {
+					val intent = Intent(context, NotificationSettings::class.java)
+					context.startActivity(intent)
+				}
 			)
 			SettingsListItem(
 				icon = Icons.Default.BatteryChargingFull,
 				title = stringResource(R.string.nav_settings_item_general_power),
-				onClick = {}
+				onClick = {
+					val intent = Intent(context, PowerSettings::class.java)
+					context.startActivity(intent)
+				},
+				point = -1
+			)
+			SettingsListItem(
+				icon = Icons.Default.Security,
+				title = stringResource(R.string.nav_settings_item_general_permissions),
+				onClick = {
+					val intent = Intent(context, PermissionsSettings::class.java)
+					context.startActivity(intent)
+				},
+				point = 5
 			)
 			HorizontalDivider(
 				modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
@@ -208,6 +235,7 @@ fun SettingsListItem(
 	icon: ImageVector,
 	title: String,
 	onClick: () -> Unit,
+	point: Int = 0,
 ) {
 	ListItem(
 		modifier = Modifier
@@ -227,12 +255,37 @@ fun SettingsListItem(
 			)
 		},
 		trailingContent = {
-			Icon(
-				imageVector = Icons.Default.ChevronRight,
-				contentDescription = null,
-				modifier = Modifier.size(16.dp),
-				tint = MaterialTheme.colorScheme.outline
-			)
+			Row(
+				verticalAlignment = Alignment.CenterVertically
+			) {
+				if (point > 0) {
+					Text(
+						text = point.toString(),
+						style = MaterialTheme.typography.labelSmall,
+						color = MaterialTheme.colorScheme.onError,
+						modifier = Modifier
+							.defaultMinSize(minWidth = 16.dp, minHeight = 16.dp)
+							.background(
+								color = MaterialTheme.colorScheme.error,
+								shape = CircleShape
+							)
+							.padding(horizontal = 4.dp, vertical = 2.dp)
+					)
+				} else if (point < 0) {
+					Icon(
+						imageVector = Icons.Default.Circle,
+						contentDescription = null,
+						modifier = Modifier.size(8.dp),
+						tint = MaterialTheme.colorScheme.error
+					)
+				}
+				Icon(
+					imageVector = Icons.Default.ChevronRight,
+					contentDescription = null,
+					modifier = Modifier.size(16.dp),
+					tint = MaterialTheme.colorScheme.outline
+				)
+			}
 		},
 		colors = ListItemDefaults.colors(containerColor = Color.Transparent)
 	)

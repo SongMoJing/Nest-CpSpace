@@ -53,7 +53,7 @@ fun PersonalInfo(
 
 	val male = stringResource(R.string.string_gender_male)
 	val female = stringResource(R.string.string_gender_female)
-	val unknown = stringResource(R.string.string_gender_unknown)
+	val unknown = stringResource(R.string.string_unknown)
 	Column(
 		modifier = Modifier
 			.fillMaxWidth()
