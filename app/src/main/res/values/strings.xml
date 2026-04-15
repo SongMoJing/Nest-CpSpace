@@ -27,10 +27,8 @@
 	<string name="string_gender_female">女</string>
 
 	<string name="service_running">后台服务运行中</string>
-	<string name="service_running_locationProvider_enable">位置信息由 %s 提供</string>
+	<string name="service_running_locationProvider_enable">实时定位已开启</string>
 	<string name="service_running_locationProvider_disable">定位已关闭</string>
-	<string name="service_running_locationProvider_gps">GPS</string>
-	<string name="service_running_locationProvider_network">网络</string>
 	<string name="service_running_locationProvider_action_enable">开启定位</string>
 	<string name="service_running_locationProvider_action_disable">关闭定位</string>
 </resources>

@@ -4,9 +4,11 @@ import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.util.Log
+import top.song_mojing.nest.android.sql.model.LocationInformation
 import top.song_mojing.nest.manager.StateManager
 
 class LocationServices(
+	val service: CoreCommunicationService,
 	locationManager: LocationManager
 ) : LocationListener {
 
@@ -33,6 +35,12 @@ class LocationServices(
 	override fun onLocationChanged(location: Location) {
 		Log.d("CoreCommunicationService", "原生定位成功: 纬度 ${location.latitude}, 经度 ${location.longitude}")
 		StateManager.location.value = location
+		service.recordLocation(
+			LocationInformation.EVENT_TYPE_NORMAL,
+			location.latitude,
+			location.longitude,
+			location.accuracy
+		)
 	}
 
 	override fun onProviderEnabled(provider: String) {
@@ -44,5 +52,6 @@ class LocationServices(
 
 	override fun onProviderDisabled(provider: String) {
 		StateManager.locationProvider.removeAll { it == provider }
+		Log.d("CoreCommunicationService", "定位提供者已禁用: $provider")
 	}
 }

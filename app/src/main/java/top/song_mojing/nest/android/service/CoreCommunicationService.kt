@@ -21,12 +21,15 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import top.song_mojing.nest.R
 import top.song_mojing.nest.android.receiver.ACTION_START_LOCATION_SERVICE
 import top.song_mojing.nest.android.receiver.ACTION_STOP_LOCATION_SERVICE
 import top.song_mojing.nest.android.receiver.BatteryReceiver
 import top.song_mojing.nest.android.receiver.COMMAND_STOP_LOCATION
 import top.song_mojing.nest.android.receiver.NotificationActionReceiver
+import top.song_mojing.nest.android.sql.AppDatabase
+import top.song_mojing.nest.android.sql.model.LocationInformation
 import top.song_mojing.nest.manager.StateManager
 import top.song_mojing.nest.ui.activity.MainActivity
 
@@ -60,6 +63,10 @@ class CoreCommunicationService : Service() {
 		)
 	}
 
+	private val db by lazy {
+		AppDatabase.getDatabase(this)
+	}
+
 	private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
 	override fun onCreate() {
@@ -70,6 +77,34 @@ class CoreCommunicationService : Service() {
 			addAction(Intent.ACTION_BATTERY_CHANGED)
 			addAction(PowerManager.ACTION_POWER_SAVE_MODE_CHANGED)
 		})
+		serviceScope.launch {
+			snapshotFlow {
+				Pair(
+					StateManager.batteryLevel.intValue,
+					StateManager.locationProvider.toList()
+				)
+			}
+				.distinctUntilChanged()
+				.scan(null as Pair<Int, List<String>>?) { old, new ->
+					if (old != null) {
+						if (old.first != new.first) {
+							Log.d("Service", "变化源: 电量 ${old.first} -> ${new.first}")
+						}
+						if (old.second != new.second) {
+							Log.d("Service", "变化源: 定位列表 ${old.second} -> ${new.second}")
+							if (new.second.isNotEmpty()) {
+								recordLocation(LocationInformation.EVENT_TYPE_START)
+							} else {
+								recordLocation(LocationInformation.EVENT_TYPE_STOP)
+							}
+						}
+					}
+					new
+				}
+				.collect {
+					updateNotification()
+				}
+		}
 	}
 
 	override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -82,28 +117,9 @@ class CoreCommunicationService : Service() {
 			updateNotification()
 			return START_STICKY
 		}
-		serviceScope.launch {
-			snapshotFlow {
-				Pair(
-					StateManager.batteryLevel.intValue,
-					StateManager.locationProvider.toList()
-				)
-			}
-				.distinctUntilChanged()
-				.scan(null as Pair<Int, List<String>>?) { old, new ->
-					if (old != null) {
-						if (old.first != new.first) Log.d("Service", "变化源: 电量 ${old.first} -> ${new.first}")
-						if (old.second != new.second) Log.d("Service", "变化源: 定位列表 ${old.second} -> ${new.second}")
-					}
-					new
-				}
-				.collect {
-					updateNotification()
-				}
-		}
 		updateNotification()
 		locationServices = locationManager?.let {
-			LocationServices(it)
+			LocationServices(this, it)
 		}
 		return START_STICKY
 	}
@@ -124,13 +140,7 @@ class CoreCommunicationService : Service() {
 		val contentText = if (StateManager.locationProvider.isEmpty()) {
 			getString(R.string.service_running_locationProvider_disable)
 		} else {
-			getString(R.string.service_running_locationProvider_enable, StateManager.locationProvider.joinToString(getString(R.string.string_delimiter)) {
-				when (it) {
-					LocationManager.GPS_PROVIDER -> getString(R.string.service_running_locationProvider_gps)
-					LocationManager.NETWORK_PROVIDER -> getString(R.string.service_running_locationProvider_network)
-					else -> getString(R.string.string_unknown)
-				}
-			})
+			getString(R.string.service_running_locationProvider_enable)
 		}
 		val notification = NotificationCompat.Builder(this, channelId)
 			.setContentTitle(getString(R.string.service_running))
@@ -163,8 +173,26 @@ class CoreCommunicationService : Service() {
 
 	override fun onDestroy() {
 		super.onDestroy()
+		recordLocation(LocationInformation.EVENT_TYPE_STOP)
 		serviceScope.cancel()
 		unregisterReceiver(BatteryReceiver)
 		locationServices?.let { locationManager?.removeUpdates(it) }
+	}
+
+	fun recordLocation(
+		event: Int,
+		latitude: Double = 0.0,
+		longitude: Double = 0.0,
+		accuracy: Float = 0f,
+	) {
+		val stopNode = LocationInformation(
+			latitude = latitude,
+			longitude = longitude,
+			accuracy = accuracy,
+			eventType = event
+		)
+		runBlocking(Dispatchers.IO) {
+			db.locationDao().insert(stopNode)
+		}
 	}
 }
